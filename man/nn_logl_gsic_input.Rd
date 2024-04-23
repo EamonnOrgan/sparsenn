@@ -4,7 +4,7 @@
 \alias{nn_logl_gsic_input}
 \title{Group SIC log-likelihood for input nodes}
 \usage{
-nn_logl_gsic_input(theta_s, y, X, q, eps = 0)
+nn_logl_gsic_input(theta_s, y, X, q, eps = 0, tanh_param = FALSE, c = NULL)
 }
 \arguments{
 \item{theta_s}{A vector of the neural network parameters and log(sigma)}
@@ -16,9 +16,14 @@ nn_logl_gsic_input(theta_s, y, X, q, eps = 0)
 \item{q}{Number of hidden nodes}
 
 \item{eps}{Epsilon value (default = 0)}
+
+\item{tanh_param}{Switch to use hyperbolic tangent parametrisation for
+constrained optimization}
+
+\item{c}{constraint for tanh parametrisation}
 }
 \value{
-neagtive penalised log-likelihood value
+negative penalised log-likelihood value
 }
 \description{
 Group SIC log-likelihood for input nodes

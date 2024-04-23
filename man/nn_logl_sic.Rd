@@ -4,7 +4,7 @@
 \alias{nn_logl_sic}
 \title{SIC log-likelihood}
 \usage{
-nn_logl_sic(theta_s, y, X, q, eps)
+nn_logl_sic(theta_s, y, X, q, eps, tanh_param = FALSE, c = NULL)
 }
 \arguments{
 \item{theta_s}{A vector of the neural network parameters and log(sigma)}
@@ -16,9 +16,14 @@ nn_logl_sic(theta_s, y, X, q, eps)
 \item{q}{Number of hidden nodes}
 
 \item{eps}{Epsilon value}
+
+\item{tanh_param}{Switch to use hyperbolic tangent parametrisation for
+constrained optimization}
+
+\item{c}{constraint for tanh parametrisation}
 }
 \value{
-neagtive penalised log-likelihood value
+negative penalised log-likelihood value
 }
 \description{
 SIC log-likelihood

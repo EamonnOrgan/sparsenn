@@ -5,10 +5,20 @@
 #' @param X Input matrix
 #' @param q Number of hidden nodes
 #' @param eps Epsilon value
+#' @param tanh_param Switch to use hyperbolic tangent parametrisation for
+#' constrained optimization
+#' @param c constraint for tanh parametrisation
 #'
-#' @return neagtive penalised log-likelihood value
+#' @return negative penalised log-likelihood value
 #' @export
-nn_logl_sic <- function(theta_s, y, X, q, eps){
+nn_logl_sic <- function(theta_s, y, X, q, eps, tanh_param = FALSE, c = NULL){
+
+  if (tanh_param & is.null(c)) {
+    stop("Error: c must not be NULL when tanh_param == TRUE")
+  } else if (tanh_param) {
+    theta_orig <- theta_s
+    theta_s <- c(c * tanh(theta_s[-length(theta_s)]), theta_s[length(theta_s)])
+  }
 
   n <- nrow(X)
   p <- dim(X)[2] - 1
@@ -43,11 +53,15 @@ nn_logl_sic <- function(theta_s, y, X, q, eps){
 
   theta_tilde <- theta_s * weights_ind
 
-  attr(mlogl_p, "gradient") <-
+  grad <-
     c(as.vector(t(X) %*% d2), t(d1) %*% H, n - (sse / (sigma2))) +
     (log(n) / 2) * ((2 * theta_tilde * eps ^ 2) / (theta_tilde ^ 2 + eps ^ 2) ^ 2)
 
+  if (tanh_param) {
+    grad <- grad * c((1 - tanh(theta_orig[-length(theta_orig)]) ^ 2) * c, 1)
+  }
 
+  attr(mlogl_p, "gradient") <- grad
 
   return(mlogl_p)
 }
@@ -59,10 +73,21 @@ nn_logl_sic <- function(theta_s, y, X, q, eps){
 #' @param X Input matrix
 #' @param q Number of hidden nodes
 #' @param eps Epsilon value (default = 0)
+#' @param tanh_param Switch to use hyperbolic tangent parametrisation for
+#' constrained optimization
+#' @param c constraint for tanh parametrisation
 #'
-#' @return neagtive penalised log-likelihood value
+#' @return negative penalised log-likelihood value
 #' @export
-nn_logl_gsic_hidden <- function(theta_s, y, X, q, eps = 0){
+nn_logl_gsic_hidden <- function(theta_s, y, X, q, eps = 0, tanh_param = FALSE,
+                                c = NULL){
+
+  if (tanh_param & is.null(c)) {
+    stop("Error: c must not be NULL when tanh_param == TRUE")
+  } else if (tanh_param) {
+    theta_orig <- theta_s
+    theta_s <- c(c * tanh(theta_s[-length(theta_s)]), theta_s[length(theta_s)])
+  }
 
   n <- nrow(X)
   p <- dim(X)[2] - 1
@@ -122,10 +147,15 @@ nn_logl_gsic_hidden <- function(theta_s, y, X, q, eps = 0){
 
   p_vec <- c(rep(c(0, rep(p + 1, times = p)), times = q), 0, rep(p + 1, times = q), 0)
 
-
-  attr(mlogl_p, "gradient") <-
+  grad <-
     c(as.vector(t(X) %*% d2), t(d1) %*% H, n - (sse / (sigma2))) +
-    (log(n) / 2) * ((2 * theta_tilde * eps ^ 2) / (theta_tilde_denom ^ 2 + eps ^ 2) ^ 2) * p_vec
+    (log(n) / 2) * ((2 * theta_tilde * eps ^ 2) / (theta_tilde_denom + eps ^ 2) ^ 2) * p_vec
+
+  if (tanh_param) {
+    grad <- grad * c((1 - tanh(theta_orig[-length(theta_orig)]) ^ 2) * c, 1)
+  }
+
+  attr(mlogl_p, "gradient") <- grad
 
   return(mlogl_p)
 }
@@ -137,10 +167,21 @@ nn_logl_gsic_hidden <- function(theta_s, y, X, q, eps = 0){
 #' @param X Input matrix
 #' @param q Number of hidden nodes
 #' @param eps Epsilon value (default = 0)
+#' @param tanh_param Switch to use hyperbolic tangent parametrisation for
+#' constrained optimization
+#' @param c constraint for tanh parametrisation
 #'
-#' @return neagtive penalised log-likelihood value
+#' @return negative penalised log-likelihood value
 #' @export
-nn_logl_gsic_input <- function(theta_s, y, X, q, eps = 0){
+nn_logl_gsic_input <- function(theta_s, y, X, q, eps = 0, tanh_param = FALSE,
+                               c = NULL){
+
+  if (tanh_param & is.null(c)) {
+    stop("Error: c must not be NULL when tanh_param == TRUE")
+  } else if (tanh_param) {
+    theta_orig <- theta_s
+    theta_s <- c(c * tanh(theta_s[-length(theta_s)]), theta_s[length(theta_s)])
+  }
 
   n <- nrow(X)
   p <- dim(X)[2] - 1
@@ -188,14 +229,19 @@ nn_logl_gsic_input <- function(theta_s, y, X, q, eps = 0){
                                             \(x) theta_s[weights_grouped[, x]]),
                                      2, \(y) sum(y ^ 2))),
                              times = q),
-                         theta_tilde[c(((p + 1) * q + 1):(((p + 2) * q + 1)))],
+                         theta_tilde[c(((p + 1) * q + 1):(((p + 2) * q + 1)))] ^ 2,
                          0)
   q_vec <- c(rep(c(0, rep(q, times = p)), times = q), 0, rep(1, times = q), 0)
 
-
-  attr(mlogl_p, "gradient") <-
+  grad <-
     c(as.vector(t(X) %*% d2), t(d1) %*% H, n - (sse / (sigma2))) +
-    (log(n) / 2) * ((2 * theta_tilde * eps ^ 2) / (theta_tilde_denom ^ 2 + eps ^ 2) ^ 2) * q_vec
+    (log(n) / 2) * ((2 * theta_tilde * eps ^ 2) / (theta_tilde_denom  + eps ^ 2) ^ 2) * q_vec
+
+  if (tanh_param) {
+    grad <- grad * c((1 - tanh(theta_orig[-length(theta_orig)]) ^ 2) * c, 1)
+  }
+
+  attr(mlogl_p, "gradient") <- grad
 
   return(mlogl_p)
 }
