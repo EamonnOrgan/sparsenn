@@ -129,3 +129,42 @@ ar1_cor <- function(p, rho) {
                     (1:p - 1))
   rho^exponent
 }
+
+#' Compare two weight vectors to match up symmetries
+#'
+#' @param W_pred weight vector to change
+#' @param W_true comparison weight vector
+#' @param p number of input nodes
+#' @param q number of hidden nodes
+#' @param input_only only compare using input-to-hidden weights (useful if
+#' hidden-to-output weights grow too large due to redundancy)
+#'
+#' @return matrix containing all weight symmetries for W
+#' @export
+weight_recover = function(W_pred, W_true, p, q){
+  true  = cbind(matrix(W_true[1:(q*(p + 1))], byrow=T, ncol=(p + 1)), W_true[((p + 1)*q + 2):((p + 1)*q + q + 1)])
+  pred  = cbind(matrix(W_pred[1:(q*(p + 1))], byrow=T, ncol=(p + 1)), W_pred[((p + 1)*q + 2):((p + 1)*q + q + 1)])
+
+  bias_t = W_true[q*(p + 1) + 1]
+  bias_p = W_pred[q*(p + 1) + 1]
+
+  mat = matrix(NA, nrow = q, ncol = q*2)
+
+  for(i in 1:q){
+    mat[i,]=c(rowSums((matrix(rep(pred[i,], q),nrow = q, byrow = T) - true)^2),
+              rowSums((matrix(rep(-pred[i,], q), nrow = q, byrow = T) - true)^2))
+  }
+
+  ind = apply(mat, 1 , which.min)
+
+  for( i in 1:q){
+    if(ind[i] %in% c((q + 1):(2*q))){
+      ind[i] = ind[i] - q
+      bias_p = bias_p + pred[i, ncol(pred)]
+      pred[i,] = -pred[i,]
+    }
+  }
+  predW = pred[order(ind), ,drop = FALSE]
+  predW_vec = c(t(predW[,1:(p + 1)]), bias_p, t(predW[, (p + 2)]))
+  return(predW_vec)
+}

@@ -170,7 +170,8 @@ nn_sic_twostep <- function(X, y, q, method = c("single", "group", "twostep"),
     for (i in (tau + 1):length(eps)) {
 
       nlm_nn_sic <- nlm(nn_logl2, weight_matrix[i - 1, ], y, X, q, eps = eps[i],
-                        iterlim = n_iter)
+                        iterlim = n_iter,
+                        check.analyticals = FALSE)
 
       weight_matrix[i, ] <- nlm_nn_sic$estimate
 
