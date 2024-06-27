@@ -1,3 +1,13 @@
+#' Sigmoid activation function
+#'
+#'
+#' @param x Input
+#' @return Sigmoid function
+#' @noRd
+sigmoid <- function(x) 1 / (1 + exp(-x))
+
+
+
 #' Generate all weight symmetries
 #'
 #' @param W weight vector
