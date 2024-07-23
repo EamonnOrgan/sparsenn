@@ -140,7 +140,7 @@ nn_sic_twostep <- function(X, y, q, method = c("single", "group", "twostep"),
 
   weight_matrix <- matrix(NA, nrow = t, ncol = (p + 2) * q + 2)
 
-  for (i in 1:(length(eps) - tau)) {
+  for (i in 1:(tau)) {
 
     if (i == 1) {
 
